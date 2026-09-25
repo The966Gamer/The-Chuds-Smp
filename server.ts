@@ -45,19 +45,19 @@ const PORT = Number(process.env.PORT) || 3000;
 app.use(express.json());
 app.use(cookieParser());
 
-// Support Netlify function route mapping
+// Support Netlify function route mapping and base path normalization
 app.use((req, _res, next) => {
-  if (req.url.startsWith("/.netlify/functions/api")) {
-    req.url = req.url.replace("/.netlify/functions/api", "/api");
+  if (req.url.startsWith("/.netlify/functions/api/")) {
+    req.url = req.url.replace("/.netlify/functions/api/", "/api/");
+  } else if (req.url === "/.netlify/functions/api") {
+    req.url = "/api";
   }
   next();
 });
 
-// Initialize database schemas in background
-void initDb();
-
-// Start Discord Bot if token configured (only in persistent Node environments, not serverless functions)
+// Initialize database schemas (in background for long-running servers, but guarded)
 if (!isServerless) {
+  void initDb();
   void startDiscordBot();
 }
 
@@ -992,6 +992,17 @@ app.post("/api/mc/event", async (req, res) => {
   });
 
   res.json({ ok: true, received: type });
+});
+
+// 404 handler for API routes
+app.all("/api/*", (req, res) => {
+  res.status(404).json({ error: `API route not found: ${req.method} ${req.path}` });
+});
+
+// Global Express error handler to guarantee valid JSON responses
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("[express] Uncaught error:", err);
+  res.status(500).json({ error: "Internal Server Error", message: err?.message || String(err) });
 });
 
 // ------------------------------------------------------------------ Vite & Static Frontend

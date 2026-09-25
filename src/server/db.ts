@@ -123,8 +123,9 @@ export function getDbPool(): Pool | null {
       pool = new Pool({
         connectionString: connStr,
         ssl: connStr.includes("localhost") || connStr.includes("127.0.0.1") ? false : { rejectUnauthorized: false },
-        max: 10,
-        connectionTimeoutMillis: 5000,
+        max: 5,
+        connectionTimeoutMillis: 2500,
+        idleTimeoutMillis: 5000,
       });
 
       pool.on("error", (err) => {
