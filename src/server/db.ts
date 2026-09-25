@@ -47,17 +47,19 @@ export const memDb: MemoryDb = {
 // Seed default admin in memory if empty
 function seedMemoryDefaults() {
   if (memDb.users.size === 0) {
+    const defaultPass = getConfig().ADMIN_PASSWORD || "chudsmp2026";
     const salt = crypto.randomBytes(16).toString("hex");
-    const hash = crypto.scryptSync("chudsmp2026", salt, 64).toString("hex");
+    const hash = crypto.scryptSync(defaultPass, salt, 64).toString("hex");
     const adminId = crypto.randomUUID();
-    memDb.users.set("superduck220", {
+    const adminUser = getConfig().ADMIN_USERNAME || "SuperDuck220";
+    memDb.users.set(adminUser.toLowerCase(), {
       id: adminId,
-      username: "SuperDuck220",
-      username_display: "SuperDuck220",
+      username: adminUser,
+      username_display: adminUser,
       password_hash: `${salt}:${hash}`,
       role: "admin",
       power_scope: "full",
-      mc_username: "SuperDuck220",
+      mc_username: adminUser,
       head_url: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

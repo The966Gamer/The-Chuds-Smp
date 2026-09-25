@@ -19,6 +19,7 @@ export interface AppConfig {
   DISCORD_BOT_TOKEN: string;
   SESSION_SECRET: string;
   ADMIN_USERNAME: string;
+  ADMIN_PASSWORD?: string;
 }
 
 const CONFIG_FILE = path.resolve(process.cwd(), "config.storage.json");
@@ -60,6 +61,7 @@ export function getConfig(): AppConfig {
     DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN || stored.DISCORD_BOT_TOKEN || "",
     SESSION_SECRET: process.env.SESSION_SECRET || stored.SESSION_SECRET || "thechudsmp-super-secret-session-key",
     ADMIN_USERNAME: process.env.ADMIN_USERNAME || stored.ADMIN_USERNAME || "SuperDuck220",
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || stored.ADMIN_PASSWORD || "chudsmp2026",
   };
 
   return cachedConfig;
