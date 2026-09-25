@@ -507,6 +507,66 @@ app.get("/api/graves", async (req, res) => {
   res.json({ graves: mapped });
 });
 
+app.post("/api/graves", async (req, res) => {
+  const { playerName, x, y, z, dimension, despawnMinutes } = req.body;
+  if (!playerName || x === undefined || y === undefined || z === undefined) {
+    res.status(400).json({ error: "Player name and X, Y, Z coordinates are required" });
+    return;
+  }
+
+  const cleanDim = dimension || "minecraft:overworld";
+  const numX = Number(x);
+  const numY = Number(y);
+  const numZ = Number(z);
+
+  if (isNaN(numX) || isNaN(numY) || isNaN(numZ)) {
+    res.status(400).json({ error: "Coordinates must be valid numbers" });
+    return;
+  }
+
+  await recordMinecraftEvent({
+    type: "grave_created",
+    source: "manual-panel",
+    playerName: String(playerName).trim(),
+    message: `Grave logged for ${playerName} at ${numX}, ${numY}, ${numZ} (${cleanDim})`,
+    data: {
+      graveKey: `grave-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      x: numX,
+      y: numY,
+      z: numZ,
+      dimension: cleanDim,
+      despawnMinutes: Number(despawnMinutes) || 60,
+    },
+  });
+
+  res.json({ ok: true });
+});
+
+app.patch("/api/graves/:graveKey", async (req, res) => {
+  const { status } = req.body;
+  const graveKey = req.params.graveKey;
+  const gr = memDb.graves.find((g) => g.grave_key === graveKey);
+  if (!gr) {
+    res.status(404).json({ error: "Grave not found" });
+    return;
+  }
+
+  gr.status = status || "recovered";
+  try {
+    await q(`update graves set status = $1, updated_at = now() where grave_key = $2`, [gr.status, graveKey]);
+  } catch {
+    // non-fatal
+  }
+
+  broadcastEvent("event", {
+    type: "grave_removed",
+    data: { graveKey },
+    createdAt: new Date().toISOString(),
+  });
+
+  res.json({ ok: true, grave: gr });
+});
+
 // ------------------------------------------------------------------ Chat
 app.get("/api/chat", async (req, res) => {
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));

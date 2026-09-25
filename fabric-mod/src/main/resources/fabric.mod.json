@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "thechudsmp_bridge",
+  "version": "1.0.0",
+  "name": "TheChudSMP Panel Bridge",
+  "description": "Syncs player deaths, graves, joins, and coordinates to TheChudSMP Web Dashboard.",
+  "authors": [
+    "TheChudSMP Team"
+  ],
+  "contact": {
+    "homepage": "https://client.falixnodes.net"
+  },
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "com.thechudsmp.bridge.TheChudSMPMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "minecraft": ">=1.20",
+    "fabric": "*"
+  }
+}
