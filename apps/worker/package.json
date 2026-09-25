@@ -1,0 +1,23 @@
+{
+  "name": "thechudsmp-discord-worker",
+  "version": "1.0.0",
+  "description": "Persistent Node.js worker for TheChudSmp Discord Gateway and Slash Commands",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "pg": "^8.23.0",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/pg": "^8.23.1",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.21.0",
+    "typescript": "^7.0.2"
+  }
+}

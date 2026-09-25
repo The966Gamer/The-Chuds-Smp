@@ -1,0 +1,21 @@
+# Netlify deployment for the Falix Control Panel (Next.js runtime).
+#
+# The panel is a full Node.js app (long-lived SSE streams, boot-time workers,
+# on-disk config cache), so it runs on Netlify's Next.js runtime with
+# serverless functions. All secrets must be supplied as environment
+# variables in Site configuration → Environment variables — the filesystem
+# is read-only at runtime, so the setup wizard's file cache does not persist.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Keep SSE (realtime stream) on functions with a long timeout.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Long-lived SSE connections are best-effort on serverless; the panel's
+# client automatically falls back to polling if the stream ends early.

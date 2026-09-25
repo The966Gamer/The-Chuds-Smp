@@ -1,0 +1,6 @@
+{
+  "name": "TheChudSmp Minecraft Control Panel",
+  "description": "Rebuilt Minecraft server control panel with FalixNodes integration, RCON console, real-time players, graves, chat, activity, statistics, and isolated Discord Gateway worker.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

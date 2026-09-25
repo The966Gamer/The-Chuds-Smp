@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "falixpanel",
+  "version": "${version}",
+  "name": "Falix Panel Integration",
+  "description": "Streams real server events (joins, deaths, graves, chat, stats) to the Falix Control Panel and adds the /panel command.",
+  "authors": ["Falix Panel"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.falix.panel.FalixPanelMod"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21.1",
+    "java": ">=21"
+  }
+}
