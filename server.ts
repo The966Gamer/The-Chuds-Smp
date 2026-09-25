@@ -32,13 +32,19 @@ import {
   getDiscordBotStatus,
 } from "./src/server/discordBot";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const isServerless = Boolean(
   process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.SERVERLESS,
 );
 
+// Safe __dirname that works both locally (tsx/node) and on Netlify Functions (esbuild)
+let __dirname = process.cwd();
+try {
+  if (typeof import.meta !== "undefined" && import.meta.url) {
+    __dirname = path.dirname(fileURLToPath(import.meta.url));
+  }
+} catch {
+  // keep process.cwd() fallback
+}
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
