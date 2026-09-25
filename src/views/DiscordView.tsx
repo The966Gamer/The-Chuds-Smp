@@ -236,8 +236,14 @@ export default function DiscordView() {
               </div>
 
               {bot?.lastError && !bot?.botRunning ? (
-                <div style={{ fontSize: 12.5, color: "var(--warn)", background: "var(--warn-dim)", padding: "8px 12px", borderRadius: 4 }}>
-                  ⚠️ Gateway notice: {bot.lastError}
+                <div style={{ fontSize: 12.5, color: "var(--warn)", background: "var(--warn-dim)", padding: "10px 14px", borderRadius: 4, lineHeight: 1.5 }}>
+                  <div style={{ fontWeight: 600, marginBottom: 4 }}>⚠️ Gateway Notice:</div>
+                  <div>{bot.lastError}</div>
+                  {bot.lastError.includes("4004") ? (
+                    <div style={{ marginTop: 6, fontSize: 12, opacity: 0.9 }}>
+                      💡 <strong>Fix:</strong> Go to the <a href="https://discord.com/developers/applications" target="_blank" rel="noreferrer" style={{ textDecoration: "underline", color: "inherit" }}>Discord Developer Portal</a> → select your Application → <strong>Bot</strong> tab → click <strong>Reset Token</strong> → copy the fresh token and paste it below.
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
 

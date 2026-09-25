@@ -44,15 +44,17 @@ export const memDb: MemoryDb = {
   login_attempts: [],
 };
 
-// Seed default admin in memory if empty
-function seedMemoryDefaults() {
-  if (memDb.users.size === 0) {
-    const defaultPass = getConfig().ADMIN_PASSWORD || "chudsmp2026";
+// Seed default admin in memory if empty or update if config changed
+export function seedMemoryDefaults() {
+  const adminUser = getConfig().ADMIN_USERNAME || "SuperDuck220";
+  const defaultPass = getConfig().ADMIN_PASSWORD || "chudsmp2026";
+  const userKey = adminUser.toLowerCase();
+
+  if (!memDb.users.has(userKey)) {
     const salt = crypto.randomBytes(16).toString("hex");
     const hash = crypto.scryptSync(defaultPass, salt, 64).toString("hex");
     const adminId = crypto.randomUUID();
-    const adminUser = getConfig().ADMIN_USERNAME || "SuperDuck220";
-    memDb.users.set(adminUser.toLowerCase(), {
+    memDb.users.set(userKey, {
       id: adminId,
       username: adminUser,
       username_display: adminUser,
@@ -309,6 +311,21 @@ export async function initDb(): Promise<void> {
           updated_at timestamptz not null default now()
         );
       `);
+
+      // Seed default admin in PostgreSQL if users table is empty
+      const adminUser = getConfig().ADMIN_USERNAME || "SuperDuck220";
+      const defaultPass = getConfig().ADMIN_PASSWORD || "chudsmp2026";
+      const existing = await client.query("select id from users where username = $1 limit 1", [adminUser]);
+      if (existing.rows.length === 0) {
+        const salt = crypto.randomBytes(16).toString("hex");
+        const hash = crypto.scryptSync(defaultPass, salt, 64).toString("hex");
+        await client.query(
+          `insert into users (username, username_display, password_hash, role, power_scope, mc_username)
+           values ($1, $2, $3, 'admin', 'full', $4)
+           on conflict (username) do nothing`,
+          [adminUser, adminUser, `${salt}:${hash}`, adminUser],
+        );
+      }
 
       isPostgresReady = true;
       console.log("[db] PostgreSQL connected and schemas validated.");

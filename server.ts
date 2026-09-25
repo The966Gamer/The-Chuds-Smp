@@ -63,65 +63,70 @@ if (!isServerless) {
 
 // ------------------------------------------------------------------ Auth APIs
 app.post("/api/auth/login", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    res.status(400).json({ error: "Username and password required" });
-    return;
-  }
-
-  const uName = String(username).trim();
-  const pool = getDbPool();
-
-  let user = null;
-  if (pool) {
-    try {
-      const dbRes = await q(
-        `select id, username, password_hash, role, power_scope, mc_username, head_url from users where username = $1`,
-        [uName],
-      );
-      if (dbRes.rows.length > 0) {
-        user = dbRes.rows[0];
-      }
-    } catch {
-      // fallback
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      res.status(400).json({ error: "Username and password required" });
+      return;
     }
+
+    const uName = String(username).trim();
+    const pool = getDbPool();
+
+    let user = null;
+    if (pool) {
+      try {
+        const dbRes = await q(
+          `select id, username, password_hash, role, power_scope, mc_username, head_url from users where username = $1`,
+          [uName],
+        );
+        if (dbRes.rows.length > 0) {
+          user = dbRes.rows[0];
+        }
+      } catch (dbErr) {
+        console.warn("[auth] DB lookup failed, falling back to memory:", dbErr);
+      }
+    }
+
+    if (!user) {
+      user = memDb.users.get(uName.toLowerCase());
+    }
+
+    if (!user) {
+      res.status(401).json({ error: "Invalid username or password" });
+      return;
+    }
+
+    const valid = verifyPassword(String(password), user.password_hash);
+    if (!valid) {
+      res.status(401).json({ error: "Invalid username or password" });
+      return;
+    }
+
+    const userAgent = (req.headers["user-agent"] as string) || "";
+    const ip = (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "";
+    const { token, csrfToken, expiresAt } = await createSession(user.id, userAgent, ip);
+
+    res.cookie("chudsmp_session", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      expires: expiresAt,
+      path: "/",
+    });
+
+    res.json({
+      csrfToken,
+      token,
+      user: {
+        username: user.username,
+        role: user.role,
+      },
+    });
+  } catch (err: any) {
+    console.error("[auth] Login error:", err);
+    res.status(500).json({ error: "Login processing error", details: err?.message || String(err) });
   }
-
-  if (!user) {
-    user = memDb.users.get(uName.toLowerCase());
-  }
-
-  if (!user) {
-    res.status(401).json({ error: "Invalid username or password" });
-    return;
-  }
-
-  const valid = verifyPassword(String(password), user.password_hash);
-  if (!valid) {
-    res.status(401).json({ error: "Invalid username or password" });
-    return;
-  }
-
-  const userAgent = req.headers["user-agent"];
-  const ip = (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress;
-  const { token, csrfToken, expiresAt } = await createSession(user.id, userAgent, ip);
-
-  res.cookie("chudsmp_session", token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    expires: expiresAt,
-    path: "/",
-  });
-
-  res.json({
-    csrfToken,
-    token,
-    user: {
-      username: user.username,
-      role: user.role,
-    },
-  });
 });
 
 app.post("/api/auth/logout", requireAuth, async (req, res) => {

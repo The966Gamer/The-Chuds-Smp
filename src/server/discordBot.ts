@@ -514,7 +514,34 @@ export function startDiscordBot() {
       state.botUser = null;
       if (heartbeatTimer) clearInterval(heartbeatTimer);
 
-      const msg = `Gateway closed (${code}): ${reason.toString()}`;
+      const reasonStr = reason.toString() || "No reason provided";
+      let msg = `Gateway closed (${code}): ${reasonStr}`;
+      
+      // Discord Gateway Close Code 4004: Authentication Failed (Invalid Token)
+      if (code === 4004) {
+        msg = `Authentication failed (Code 4004). The provided DISCORD_BOT_TOKEN is invalid, expired, or reset in Discord Developer Portal. Reconnection halted.`;
+        console.error(`[discord-bot] ${msg}`);
+        state.lastError = msg;
+        // Do not auto-reconnect with an invalid token to avoid getting rate-limited or banned by Discord API
+        return;
+      }
+
+      // Discord Gateway Close Code 4014: Disallowed Intent(s)
+      if (code === 4014) {
+        msg = `Disallowed Intent (Code 4014). Please enable privileged intents or verify bot permissions in Discord Developer Portal.`;
+        console.error(`[discord-bot] ${msg}`);
+        state.lastError = msg;
+        return;
+      }
+
+      // Discord Gateway Close Code 4013: Invalid intent(s)
+      if (code === 4013) {
+        msg = `Invalid Intents (Code 4013). Gateway intents rejected.`;
+        console.error(`[discord-bot] ${msg}`);
+        state.lastError = msg;
+        return;
+      }
+
       console.warn(`[discord-bot] ${msg}`);
       state.lastError = msg;
 
@@ -522,7 +549,7 @@ export function startDiscordBot() {
         if (reconnectTimer) clearTimeout(reconnectTimer);
         reconnectTimer = setTimeout(() => {
           startDiscordBot();
-        }, 5000);
+        }, 8000);
       }
     });
 
